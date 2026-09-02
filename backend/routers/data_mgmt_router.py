@@ -61,6 +61,13 @@ async def download_template(with_example: bool = True, user: dict = Depends(requ
     return _attachment(content, "SIPRO_Template_Migrasi_Master.xlsx", XLSX)
 
 
+@router.get("/public/template.xlsx")
+async def download_template_public(with_example: bool = True):
+    """Template kosong (tanpa data organisasi) — boleh dibagikan ke klien lewat tautan."""
+    content = build_workbook({}, with_example=with_example)
+    return _attachment(content, "SIPRO_Template_Migrasi_Master.xlsx", XLSX)
+
+
 @router.get("/export.xlsx")
 async def export_master(user: dict = Depends(require_data_admin)):
     org = _org(user)
