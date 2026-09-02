@@ -36,11 +36,11 @@ async def _accessible_project_ids(user: dict):
 SCOPE_BY_PREFIX = {"SPK": "spk"}
 
 
-async def _next_number(prefix: str, coll, org_id: str = None) -> str:
+async def _next_number(prefix: str, coll, org_id: str = None, context: dict = None) -> str:
     """Nomor atomik per org+tahun. Dulu `count_documents+1`: dua request bersamaan
     menghasilkan nomor identik, dan hitungannya memakai org default (bocor antar tenant)."""
     return await seq.next_number(SCOPE_BY_PREFIX.get(prefix, prefix.lower()),
-                                 org_id or ORG_ID, prefix=prefix)
+                                 org_id or ORG_ID, prefix=prefix, context=context)
 
 
 # ----------------------------- Subcontractors -----------------------------
@@ -147,7 +147,8 @@ async def create_spk(payload: SPKCreate,
         raise HTTPException(status_code=404, detail="Subkontraktor tidak ditemukan")
     ts = now_iso()
     doc = {
-        "id": new_id(), "org_id": org, "spk_number": await _next_number("SPK", db.spk, org),
+        "id": new_id(), "org_id": org, "spk_number": await _next_number(
+            "SPK", db.spk, org, {"project_id": payload.project_id, "subcon_code": sub.get("code")}),
         "subcontractor_id": payload.subcontractor_id, "subcontractor_name": sub.get("name"),
         "project_id": payload.project_id, "project_name": proj.get("name"),
         "title": payload.title, "scope": payload.scope,

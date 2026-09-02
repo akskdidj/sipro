@@ -257,9 +257,12 @@ async def _deal_payment_summary(deal_id: str, org: str, price: int) -> dict:
             "outstanding": outstanding, "paid_pct": pct, "ar_status": (inv or {}).get("status")}
 
 
-async def _legal_number(org: str, prefix: str) -> str:
+async def _legal_number(org: str, prefix: str, deal: dict = None) -> str:
     field = "ppjb" if prefix == "PPJB" else "ajb"
-    return await seq.next_number(f"legal:{field}", org, prefix=prefix)
+    d = deal or {}
+    return await seq.next_number(f"legal:{field}", org, prefix=prefix, context={
+        "stage": prefix, "project_id": d.get("project_id"), "unit_id": d.get("unit_id"),
+        "customer_id": d.get("customer_id"), "customer_name": d.get("customer_name")})
 
 
 @router.get("/deals/{deal_id}/legal")
@@ -294,7 +297,7 @@ async def sign_ppjb(deal_id: str, payload: PpjbSign,
     lead = await db.leads.find_one({"id": d.get("lead_id")}, {"_id": 0, "name": 1}) or {}
     unit = await db.units.find_one({"id": d.get("unit_id")}, {"_id": 0, "code": 1}) or {}
     pay = await _deal_payment_summary(deal_id, org, d.get("price", 0))
-    ppjb = {"number": payload.number or await _legal_number(org, "PPJB"),
+    ppjb = {"number": payload.number or await _legal_number(org, "PPJB", d),
             "signed_date": payload.signed_date or ts[:10], "signed_by": lead.get("name"),
             "dp_paid": pay["paid"], "dp_pct": pay["paid_pct"], "note": payload.note, "created_at": ts}
     await db.deals.update_one({"id": deal_id, "org_id": org},
@@ -323,7 +326,7 @@ async def sign_ajb(deal_id: str, payload: AjbSign,
     lead = await db.leads.find_one({"id": d.get("lead_id")}, {"_id": 0, "name": 1}) or {}
     unit = await db.units.find_one({"id": d.get("unit_id")}, {"_id": 0, "code": 1}) or {}
     pay = await _deal_payment_summary(deal_id, org, d.get("price", 0))
-    ajb = {"number": payload.number or await _legal_number(org, "AJB"),
+    ajb = {"number": payload.number or await _legal_number(org, "AJB", d),
            "notary": payload.notary, "signed_date": payload.signed_date or ts[:10],
            "buyer": lead.get("name"), "outstanding_at_ajb": pay["outstanding"],
            "note": payload.note, "created_at": ts}

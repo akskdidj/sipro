@@ -218,7 +218,8 @@ async def create(org: str = ORG_ID, *, lead_id: str, unit_id: str, addons: list 
     doc = {
         "id": new_id(), "org_id": org,
         "no": (version_of or {}).get("no") or await seq.next_number("quotation", org,
-                                                                    prefix="PNW"),
+                                                                    prefix="PNW",
+                                                                    context={"unit_id": unit_id}),
         "version": int((version_of or {}).get("version") or 0) + 1,
         "parent_id": (version_of or {}).get("id"),
         "lead_id": lead_id, "lead_name": lead.get("name"), "lead_phone": lead.get("phone"),

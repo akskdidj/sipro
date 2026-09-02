@@ -138,7 +138,9 @@ async def issue(org: str, deal_id: str, level: int, actor: str) -> dict:
     doc = {
         "id": new_id(), "org_id": org, "deal_id": deal_id, "level": level,
         "level_label": LEVEL_LABEL[level], "period": periode,
-        "number": await seq.next_number("warning_letter", org, prefix=f"SP{level}"),
+        "number": await seq.next_number("warning_letter", org, prefix="SP", context={
+            "level": level, "unit_id": snap.get("unit_id"), "project_id": snap.get("project_id"),
+            "customer_name": penerima.get("name")}),
         "unit_code": snap.get("unit_code"), "buyer_name": penerima["name"],
         "buyer_phone": penerima["phone"], "buyer_address": penerima["address"],
         "customer_id": snap.get("customer_id"), "contract_id": snap.get("contract_id"),

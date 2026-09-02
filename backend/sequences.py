@@ -33,11 +33,13 @@ async def next_seq(scope: str, org_id: str, year: str = None) -> int:
 
 
 async def next_number(scope: str, org_id: str, *, prefix: str, width: int = 4,
-                      year: str = None, sep: str = "/") -> str:
-    """Format standar SIPRO: PREFIX/TAHUN/URUT (mis. SPK/2026/0001)."""
-    y = year or now_iso()[:4]
-    n = await next_seq(scope, org_id, y)
-    return f"{prefix}{sep}{y}{sep}{str(n).zfill(width)}"
+                      year: str = None, sep: str = "/", context: dict = None) -> str:
+    """Nomor berikutnya. Bila `scope` terdaftar di `numbering_registry`, pola/awalan/reset
+    diambil dari aturan penomoran organisasi (bawaan = PREFIX/TAHUN/URUT, mis. SPK/2026/0001).
+    `context` (project_id, unit_id, vendor_id, level, …) mengisi token konteks pola."""
+    import numbering  # impor lokal: numbering memakai next_seq dari modul ini
+    return await numbering.generate(scope, org_id, prefix=prefix, width=width, year=year,
+                                    sep=sep, context=context)
 
 
 async def ensure_at_least(scope: str, org_id: str, value: int, year: str = None) -> int:

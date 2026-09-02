@@ -40,10 +40,10 @@ async def _accessible_project_ids(user: dict):
 SCOPE_BY_PREFIX = {"PO": "po", "GRN": "grn"}
 
 
-async def _next_number(prefix: str, coll, org_id: str = None) -> str:
+async def _next_number(prefix: str, coll, org_id: str = None, context: dict = None) -> str:
     """Nomor atomik per org+tahun (lihat sequences.py)."""
     return await seq.next_number(SCOPE_BY_PREFIX.get(prefix, prefix.lower()),
-                                 org_id or ORG_ID, prefix=prefix)
+                                 org_id or ORG_ID, prefix=prefix, context=context)
 
 
 def _line_amount(qty, unit_price) -> int:
@@ -125,7 +125,8 @@ async def create_po(payload: POCreate,
     total = int(subtotal)
     ts = now_iso()
     doc = {
-        "id": new_id(), "org_id": org, "po_number": await _next_number("PO", db.purchase_orders, org),
+        "id": new_id(), "org_id": org, "po_number": await _next_number(
+            "PO", db.purchase_orders, org, {"project_id": payload.project_id, "vendor_id": payload.vendor_id}),
         "project_id": payload.project_id, "project_name": proj.get("name"),
         "po_type": payload.po_type, "vendor": vendor_name, "vendor_id": payload.vendor_id,
         "subcontractor_id": payload.subcontractor_id, "subcontractor_name": sub_name,
@@ -238,7 +239,8 @@ async def create_grn(payload: GRNCreate,
     grn_items = []
     received_value = 0
     ts = now_iso()
-    grn_number = await _next_number("GRN", db.grns, org)
+    grn_number = await _next_number("GRN", db.grns, org, {"project_id": po.get("project_id"),
+                                                          "vendor_id": po.get("vendor_id")})
     for gi in payload.items:
         idx = gi.po_item_index
         if idx < 0 or idx >= len(items):

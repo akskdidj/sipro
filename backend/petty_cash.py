@@ -45,7 +45,8 @@ async def _project_name(project_id, org_id):
 async def create_advance(payload, actor: str, actor_name: str, org_id=ORG_ID) -> dict:
     """Pengajuan kas bon oleh staf mana pun (status langsung `submitted`)."""
     ts = now_iso()
-    no = await seq.next_number("cash_advance", org_id, prefix="KB", width=4)
+    no = await seq.next_number("cash_advance", org_id, prefix="KB", width=4,
+                               context={"project_id": project_id})
     doc = {
         "id": new_id(), "org_id": org_id, "no": no, "status": "submitted",
         "purpose": payload.purpose, "category": payload.category,

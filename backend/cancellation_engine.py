@@ -220,7 +220,9 @@ async def request(org: str, contract: dict, actor: str, reason: str) -> dict:
     ts = now_iso()
     doc = {
         "id": new_id(), "org_id": org,
-        "number": await seq.next_number("cancellation", org, prefix="BTL"),
+        "number": await seq.next_number("cancellation", org, prefix="BTL", context={
+            "project_id": contract.get("project_id"), "unit_id": contract.get("unit_id"),
+            "customer_id": contract.get("customer_id")}),
         "contract_id": contract["id"], "contract_number": contract.get("number"),
         "deal_id": contract.get("deal_id"), "customer_id": contract.get("customer_id"),
         "customer_name": contract.get("customer_name"), "lead_id": contract.get("lead_id"),

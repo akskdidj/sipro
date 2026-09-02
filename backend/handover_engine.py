@@ -316,7 +316,8 @@ async def issue(org: str, unit_id: str, actor: str, *, handed_over_at: str = Non
                   for p in plan if p["months"] > 0]
     doc = {
         "id": new_id(), "org_id": org,
-        "number": await seq.next_number("handover", org, prefix="BAST", year=day[:4]),
+        "number": await seq.next_number("handover", org, prefix="BAST", year=day[:4],
+                                        context={"unit_id": unit_id}),
         "unit_id": unit_id, "unit_code": unit.get("code"),
         "project_id": unit.get("project_id"), "project_name": project.get("name"),
         "deal_id": (deal or {}).get("id"), "customer_id": buyer.get("customer_id"),

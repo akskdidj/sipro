@@ -218,26 +218,31 @@ async def ensure_templates(org: str = ORG_ID) -> dict:
 
 # ============================================================ penomoran (format owner)
 async def next_doc_number(org: str, code: str, project: dict) -> str:
-    """`{urut}/{kode}/{kode proyek}/{bulan romawi}/{tahun}` — format dokumen owner.
+    """Bawaan `{urut}/{kode}/{kode proyek}/{bulan romawi}/{tahun}` — format dokumen owner.
 
-    Lingkup & kebijakan reset dibaca dari `[CFG] docnum.*`, jadi developer yang ingin
-    penomoran global atau reset bulanan tidak perlu mengubah kode.
+    Pola, reset, lebar, dan cakupan urutan kini diatur di Pusat Konfigurasi › Penomoran
+    (aturan `docnum`). `[CFG] docnum.*` lama dipakai sebagai bawaan bila aturan belum diubah.
     """
+    import numbering
     doc_code = TEMPLATES.get(code, (None, None, code, None))[2]
-    scope_mode = str(await cfg.get("docnum.scope", org_id=org) or "per_project")
-    reset = str(await cfg.get("docnum.reset_policy", org_id=org) or "yearly")
-    width = int(await cfg.get("docnum.width", org_id=org) or 4)
-    ts = now_iso()
-    year, month = ts[:4], int(ts[5:7])
+    rule = await numbering.effective_rule(org, "docnum")
     pcode = (project.get("code") or "").strip() or "UMUM"
     scope = f"docnum:{doc_code}"
-    if scope_mode in ("per_project", "per_project_month"):
-        scope += f":{pcode}"
-    if scope_mode == "per_project_month":
-        scope += f":{month:02d}"
-    period = None if reset == "never" else (year if reset == "yearly" else f"{year}{month:02d}")
-    n = await seq.next_seq(scope, org, period)
-    return f"{str(n).zfill(width)}/{doc_code}/{pcode}/{ROMAN[month]}/{year}"
+    if not rule["overridden"]:
+        scope_mode = str(await cfg.get("docnum.scope", org_id=org) or "per_project")
+        reset = str(await cfg.get("docnum.reset_policy", org_id=org) or "yearly")
+        width = int(await cfg.get("docnum.width", org_id=org) or 4)
+        ts = now_iso()
+        year, month = ts[:4], int(ts[5:7])
+        if scope_mode in ("per_project", "per_project_month"):
+            scope += f":{pcode}"
+        if scope_mode == "per_project_month":
+            scope += f":{month:02d}"
+        period = None if reset == "never" else (year if reset == "yearly" else f"{year}{month:02d}")
+        n = await seq.next_seq(scope, org, period)
+        return f"{str(n).zfill(width)}/{doc_code}/{pcode}/{ROMAN[month]}/{year}"
+    return await numbering.generate(scope, org, context={
+        "project_code": pcode, "project_name": project.get("name"), "template_code": doc_code})
 
 
 # ============================================================ konteks (angka kontrak)

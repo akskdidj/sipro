@@ -90,7 +90,12 @@ async def create_document(payload: DocumentCreate,
     ts = now_iso()
     year = ts[:4]
     doc_number = await sequences.next_number(f"document:{payload.template_code}", org,
-                                             prefix=payload.template_code, year=year)
+                                             prefix=payload.template_code, year=year,
+                                             context={"template_code": payload.template_code,
+                                                      "project_code": project.get("code"),
+                                                      "project_name": project.get("name"),
+                                                      "unit_id": deal.get("unit_id"),
+                                                      "customer_name": lead.get("name")})
     ctx = {
         "doc_number": doc_number, "date": ts[:10], "buyer_name": lead.get("name"),
         "buyer_phone": lead.get("phone"), "project_name": project.get("name"),

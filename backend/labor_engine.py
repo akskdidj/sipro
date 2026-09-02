@@ -276,7 +276,7 @@ async def build_payroll(org: str, *, project_id: str, period_start: str, period_
     ts = now_iso()
     doc = {
         "id": new_id(), "org_id": org,
-        "no": await seq.next_number("labor_payroll", org, prefix="UPH"),
+        "no": await seq.next_number("labor_payroll", org, prefix="UPH", context={"project_id": project_id}),
         "project_id": project_id, "project_name": project.get("name"),
         "period_start": str(period_start)[:10], "period_end": str(period_end)[:10],
         "lines": lines, "worker_count": len(lines),

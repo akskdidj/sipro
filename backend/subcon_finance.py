@@ -50,7 +50,8 @@ async def create_advance(org: str, spk: dict, data: dict, actor: str) -> dict:
     ts = now_iso()
     doc = {
         "id": new_id(), "org_id": org,
-        "advance_number": await seq.next_number("subcon_advance", org, prefix="UMK"),
+        "advance_number": await seq.next_number("subcon_advance", org, prefix="UMK", context={
+            "project_id": spk.get("project_id"), "subcon_id": spk.get("subcontractor_id")}),
         "spk_id": spk["id"], "spk_number": spk.get("spk_number"),
         "project_id": spk["project_id"], "subcontractor_id": spk.get("subcontractor_id"),
         "subcontractor_name": spk.get("subcontractor_name"),
@@ -255,7 +256,8 @@ async def register_retention(org: str, spk: dict, claim: dict, bill: dict, actor
     ts = now_iso()
     doc = {
         "id": new_id(), "org_id": org,
-        "retention_number": await seq.next_number("subcon_retention", org, prefix="RET"),
+        "retention_number": await seq.next_number("subcon_retention", org, prefix="RET", context={
+            "project_id": spk.get("project_id"), "subcon_id": spk.get("subcontractor_id")}),
         "spk_id": spk["id"], "spk_number": spk.get("spk_number"),
         "project_id": spk["project_id"], "subcontractor_id": spk.get("subcontractor_id"),
         "subcontractor_name": spk.get("subcontractor_name"),

@@ -279,7 +279,9 @@ async def apply_receipt(deal_id, amount, method, note, actor, org_id=ORG_ID,
         # Kwitansi WAJIB bernomor. Sebelum ini nomornya tidak pernah ada, jadi PDF kwitansi
         # yang kini bisa diunduh PEMBELI di portal (Fase 51C) memakai UUID sebagai "nomor
         # dokumen" — kwitansi tanpa nomor urut bukan bukti yang bisa diaudit.
-        "receipt_no": await seq.next_number("receipt", org_id, prefix="KWT"),
+        "receipt_no": await seq.next_number("receipt", org_id, prefix="KWT",
+                                            context={"unit_id": inv.get("unit_id"),
+                                                     "customer_id": inv.get("customer_id")}),
         "deal_id": deal_id, "unit_id": inv.get("unit_id"),
         "unit_code": inv.get("unit_code"), "amount": amount, "applied": applied,
         "deposit_amount": excess, "funding": "cash", "method": method or "transfer",
@@ -389,7 +391,9 @@ async def apply_deposit(deal_id, amount, actor, org_id=ORG_ID, note=None) -> dic
     paid, outstanding_after, status = await _recalc_invoice(inv, items, ts)
     receipt = {
         "id": new_id(), "org_id": org_id,
-        "receipt_no": await seq.next_number("receipt", org_id, prefix="KWT"),
+        "receipt_no": await seq.next_number("receipt", org_id, prefix="KWT",
+                                            context={"unit_id": inv.get("unit_id"),
+                                                     "customer_id": inv.get("customer_id")}),
         "deal_id": deal_id, "unit_id": inv.get("unit_id"),
         "unit_code": inv.get("unit_code"), "amount": 0, "applied": amount - remaining,
         "deposit_amount": 0, "funding": "deposit", "method": "deposit",

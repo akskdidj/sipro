@@ -35,7 +35,9 @@ async def create_invoice(org: str, deal: dict, actor: str) -> dict:
         due = str(deal["reserved_until"])
     inv = {
         "id": new_id(), "org_id": org,
-        "no": await seq.next_number("booking_fee_invoice", org, prefix="INV-BF"),
+        "no": await seq.next_number("booking_fee_invoice", org, prefix="INV-BF",
+                                    context={"unit_id": deal.get("unit_id"),
+                                             "customer_id": deal.get("customer_id")}),
         "deal_id": deal["id"], "unit_id": deal.get("unit_id"), "unit_code": deal.get("unit_code"),
         "lead_id": deal.get("lead_id"), "lead_name": deal.get("lead_name"),
         "project_id": deal.get("project_id"), "assigned_to": deal.get("assigned_to"),
@@ -116,7 +118,8 @@ async def pay(org: str, deal_id: str, *, amount: int, method: str, note: str, ac
     ts = now_iso()
     receipt = {
         "id": new_id(), "org_id": org, "kind": "booking_fee",
-        "receipt_no": await seq.next_number("receipt", org, prefix="KWT"),
+        "receipt_no": await seq.next_number("receipt", org, prefix="KWT",
+                                            context={"unit_id": inv.get("unit_id")}),
         "deal_id": deal_id, "unit_id": inv.get("unit_id"), "unit_code": inv.get("unit_code"),
         "booking_fee_invoice_id": inv["id"], "invoice_no": inv["no"],
         "amount": amount, "applied": 0, "deposit_amount": amount, "funding": "cash",

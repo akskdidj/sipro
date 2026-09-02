@@ -33,10 +33,10 @@ PROJECT_SCOPED = ("project_manager", "site_engineer")
 SCOPE_BY_PREFIX = {"TRM": "claim", "CO": "change_order"}
 
 
-async def _next_number(prefix: str, coll, org_id: str = None) -> str:
+async def _next_number(prefix: str, coll, org_id: str = None, context: dict = None) -> str:
     """Nomor atomik per org+tahun (lihat sequences.py)."""
     return await seq.next_number(SCOPE_BY_PREFIX.get(prefix, prefix.lower()),
-                                 org_id or ORG_ID, prefix=prefix)
+                                 org_id or ORG_ID, prefix=prefix, context=context)
 
 
 async def _get_spk(org: str, spk_id: str, user: dict) -> dict:
@@ -102,7 +102,8 @@ async def create_claim(payload: ProgressClaimCreate,
     gross_est = round((claimed - prev) / 100 * cv)
     ts = now_iso()
     doc = {
-        "id": new_id(), "org_id": org, "claim_number": await _next_number("TRM", db.progress_claims, org),
+        "id": new_id(), "org_id": org, "claim_number": await _next_number(
+            "TRM", db.progress_claims, org, {"project_id": spk.get("project_id"), "subcon_id": spk.get("subcontractor_id")}),
         "spk_id": spk["id"], "spk_number": spk.get("spk_number"),
         "subcontractor_id": spk.get("subcontractor_id"), "subcontractor_name": spk.get("subcontractor_name"),
         "project_id": spk["project_id"], "project_name": spk.get("project_name"),
@@ -435,7 +436,8 @@ async def create_change_order(payload: ChangeOrderCreate,
         raise HTTPException(status_code=400, detail="Change Order harus mengubah nilai atau menambah waktu.")
     ts = now_iso()
     doc = {
-        "id": new_id(), "org_id": org, "co_number": await _next_number("CO", db.change_orders, org),
+        "id": new_id(), "org_id": org, "co_number": await _next_number(
+            "CO", db.change_orders, org, {"project_id": spk.get("project_id"), "subcon_id": spk.get("subcontractor_id")}),
         "spk_id": spk["id"], "spk_number": spk.get("spk_number"),
         "subcontractor_name": spk.get("subcontractor_name"),
         "project_id": spk["project_id"], "project_name": spk.get("project_name"),

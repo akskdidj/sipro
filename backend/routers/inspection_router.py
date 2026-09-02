@@ -96,7 +96,8 @@ async def create_inspection(payload: InspectionCreate,
     ts = now_iso()
     doc = {
         "id": new_id(), "org_id": org,
-        "inspection_number": await seq.next_number("inspection", org, prefix="QC"),
+        "inspection_number": await seq.next_number("inspection", org, prefix="QC", context={
+            "project_id": payload.project_id, "unit_id": getattr(payload, "unit_id", None)}),
         "project_id": payload.project_id, "project_name": proj.get("name"),
         "unit_id": payload.unit_id, "phase_id": payload.phase_id,
         "template_id": template.get("id") if template else None,

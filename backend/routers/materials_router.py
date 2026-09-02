@@ -225,9 +225,9 @@ async def stock_opname(payload: OpnameCreate, user: dict = Depends(require_permi
 
 
 # ------------------------------ requisitions (EPIC 2.6) ------------------------------
-async def _req_number(org: str) -> str:
+async def _req_number(org: str, project_id: str = None) -> str:
     """Nomor atomik (dulu count_documents+1 -> bisa duplikat)."""
-    return await seq.next_number("requisition", org, prefix="PR")
+    return await seq.next_number("requisition", org, prefix="PR", context={"project_id": project_id})
 
 
 async def _get_req(org: str, rid: str, user: dict) -> dict:
@@ -288,7 +288,7 @@ async def create_requisition(payload: RequisitionCreate,
         phase_name = ph.get("name") if ph else None
     ts = now_iso()
     doc = {
-        "id": new_id(), "org_id": org, "req_number": await _req_number(org),
+        "id": new_id(), "org_id": org, "req_number": await _req_number(org, payload.project_id),
         "project_id": payload.project_id, "project_name": proj.get("name"),
         "phase_id": payload.phase_id, "phase_name": phase_name, "task_id": payload.task_id,
         "purpose": payload.purpose, "items": items, "status": "submitted",

@@ -133,7 +133,8 @@ async def create_asset(payload, actor: str, org_id=ORG_ID) -> dict:
                          "(agar utangnya tercatat di daftar tagihan vendor).")
     ts = now_iso()
     acquired = payload.acquired_date or ts
-    code = await seq.next_number("fixed_asset", org_id, prefix="AST", width=4)
+    code = await seq.next_number("fixed_asset", org_id, prefix="AST", width=4,
+                                 context={"category": payload.tax_group})
     project = None
     if payload.project_id:
         project = await db.projects.find_one({"id": payload.project_id, "org_id": org_id},

@@ -294,7 +294,9 @@ async def ensure_contract(org: str, deal: dict, customer: dict, scheme: str,
     ts = now_iso()
     unit = await db.units.find_one({"id": deal.get("unit_id")}, {"_id": 0}) or {}
     project = await db.projects.find_one({"id": deal.get("project_id")}, {"_id": 0}) or {}
-    number = await seq.next_number("contract", org, prefix="KTR")
+    number = await seq.next_number("contract", org, prefix="KTR", context={
+        "project_id": deal.get("project_id"), "unit_id": deal.get("unit_id"),
+        "customer_id": deal.get("customer_id")})
     doc = {
         "id": new_id(), "org_id": org, "number": number,
         "deal_id": deal["id"], "lead_id": deal.get("lead_id"),
@@ -607,7 +609,9 @@ async def legal_advance(org: str, contract_id: str, stage: str, payload: dict,
     ts = now_iso()
     number = payload.get("number")
     if stage in ("ppjb", "ajb") and not number:
-        number = await seq.next_number(f"legal:{stage}", org, prefix=stage.upper())
+        number = await seq.next_number(f"legal:{stage}", org, prefix=stage.upper(), context={
+            "stage": stage.upper(), "project_id": c.get("project_id"), "unit_id": c.get("unit_id"),
+            "customer_id": c.get("customer_id")})
     entry = {"stage": stage, "label": ref.label_of("contract_legal_stage", stage),
              "number": number, "date": payload.get("date") or ts[:10],
              "notary": payload.get("notary"), "place": payload.get("place"),

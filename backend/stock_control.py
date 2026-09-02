@@ -55,7 +55,8 @@ async def transfer(org: str, data: dict, actor: str) -> dict:
                         f"— tidak cukup untuk memindahkan {qty:g}.")
     dst, created = await _twin_material(org, src, data["to_project_id"])
     ts = now_iso()
-    number = await seq.next_number("material_transfer", org, prefix="TRF")
+    number = await seq.next_number("material_transfer", org, prefix="TRF",
+                                   context={"project_id": data["from_project_id"]})
     unit_price = await average_cost(org, data["from_project_id"], src["id"])
     tid = new_id()
     common = {"org_id": org, "transfer_id": tid, "ref": number, "actor": actor,

@@ -94,7 +94,8 @@ async def to_po(org: str, req: dict, vendor: dict, items_in: list, *, due_date: 
     ts = now_iso()
     po = {
         "id": new_id(), "org_id": org,
-        "po_number": await seq.next_number("po", org, prefix="PO"),
+        "po_number": await seq.next_number("po", org, prefix="PO", context={
+            "project_id": req["project_id"], "vendor_code": vendor.get("code")}),
         "project_id": req["project_id"], "project_name": req.get("project_name"),
         "po_type": "material", "vendor": vendor.get("name"), "vendor_id": vendor["id"],
         "subcontractor_id": None, "subcontractor_name": None, "spk_id": None,
@@ -158,7 +159,8 @@ async def create_return(org: str, grn: dict, po: dict, kind: str, items_in: list
     ts = now_iso()
     doc = {
         "id": new_id(), "org_id": org,
-        "return_number": await seq.next_number("grn_return", org, prefix="RTN"),
+        "return_number": await seq.next_number("grn_return", org, prefix="RTN", context={
+            "project_id": po.get("project_id"), "vendor_id": po.get("vendor_id")}),
         "grn_id": grn["id"], "grn_number": grn.get("grn_number"), "po_id": po["id"],
         "po_number": po.get("po_number"), "project_id": po["project_id"],
         "vendor": po.get("vendor"), "vendor_id": po.get("vendor_id"),
